@@ -104,8 +104,8 @@ android {
         versionCode verCode
 
         // obtain your own keys at https://core.telegram.org/api/obtaining_api_id
-        def appId = '2040'
-        def appHash = 'b18441a1ff607e10a989891a5462e627'
+        def appId = '15340308'
+        def appHash = 'f2633af968ed44bd9937ce9bceb27d01'
 
         if (properties != null) {
             appId = properties.getProperty('TELEGRAM_APP_ID') ?: System.getenv('TELEGRAM_APP_ID') ?: appId
