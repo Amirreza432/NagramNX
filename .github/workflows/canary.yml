@@ -81,7 +81,7 @@ jobs:
         run: |
           export BUILD_TIMESTAMP=$(date +%s)
           echo "build_timestamp=$BUILD_TIMESTAMP" >> "$GITHUB_OUTPUT"
-          ./gradlew TMessagesProj:assembleDebug
+          ./gradlew :TMessagesProj:assembleDebug
       - name: Upload armeabi-v7a Artifact
         uses: actions/upload-artifact@v7
         with:
