@@ -22,43 +22,48 @@ jobs:
   build:
     name: Build Release APKs
     runs-on: ubuntu-latest
+    env:
+      NATIVE_TARGET: "armeabi-v7a"
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: recursive
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
         with:
-          packages: "build-tools;35.0.0 ndk;27.2.12479018 platforms;android-35"
+          packages: "build-tools;36.0.0 ndk;27.2.12479018 platforms;android-37.0"
+
+      - name: Install Native Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends --yes nasm
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v6
 
-      - name: Configure Build Credentials
+      - name: Configure Credentials
         run: |
+          echo "sdk.dir=${ANDROID_HOME}" >> local.properties
           echo "TELEGRAM_APP_ID=${{ secrets.TELEGRAM_APP_ID || '38764664' }}" >> local.properties
           echo "TELEGRAM_APP_HASH=${{ secrets.TELEGRAM_APP_HASH || 'cd3e327ff26f9af9a72ec91f3d452c54' }}" >> local.properties
-          echo "KEYSTORE_PASS=android" >> local.properties
-          echo "ALIAS_NAME=androiddebugkey" >> local.properties
-          echo "ALIAS_PASS=android" >> local.properties
 
       - name: Build APKs
         run: |
-          ./gradlew assembleRelease -x uploadCrashlyticsMappingFileRelease
+          ./gradlew :TMessagesProj:assembleRelease -x uploadCrashlyticsMappingFileRelease -PAPP_CORRECT_BUILD_KEY=false
 
       - name: Generate Checksums
         run: |
-          cd TMessagesProj/build/outputs/apk/release/
-          sha256sum *.apk > checksums.txt
+          cd TMessagesProj/build/outputs/apk/release/ || cd TMessagesProj/build/outputs/apk/
+          find . -name "*.apk" -exec sha256sum {} + > checksums.txt
           echo "Generated Checksums:"
           cat checksums.txt
 
@@ -69,8 +74,8 @@ jobs:
           tag_name: ${{ github.event.inputs.tag_name || github.ref_name }}
           name: ${{ github.event.inputs.release_name || github.ref_name }}
           files: |
-            TMessagesProj/build/outputs/apk/release/*.apk
-            TMessagesProj/build/outputs/apk/release/checksums.txt
+            TMessagesProj/build/outputs/apk/**/*.apk
+            TMessagesProj/build/outputs/apk/**/checksums.txt
           draft: false
           prerelease: false
         env:
