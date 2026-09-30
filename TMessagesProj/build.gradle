@@ -154,15 +154,17 @@ android {
     }
 
     signingConfigs {
-        release {
-            storeFile project.file('release.keystore')
-            storePassword keystorePwd
-            keyAlias alias
-            keyPassword pwd
-            enableV1Signing = true
-            enableV2Signing = true
-            enableV3Signing = true
-            enableV4Signing = false
+        if (keystorePwd != null && !keystorePwd.isBlank()) {
+            release {
+                storeFile project.file('release.keystore')
+                storePassword keystorePwd
+                keyAlias alias
+                keyPassword pwd
+                enableV1Signing = true
+                enableV2Signing = true
+                enableV3Signing = true
+                enableV4Signing = false
+            }
         }
     }
 
@@ -172,7 +174,11 @@ android {
             debuggable = true
             jniDebuggable = true
             multiDexEnabled = true
-            signingConfig = signingConfigs.release
+            if (keystorePwd != null && !keystorePwd.isBlank()) {
+                signingConfig = signingConfigs.release
+            } else {
+                signingConfig = signingConfigs.debug
+            }
         }
 
         staging {
@@ -183,7 +189,11 @@ android {
             multiDexEnabled = true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             matchingFallbacks = ['release', 'staging', 'debug']
-            signingConfig = signingConfigs.release
+            if (keystorePwd != null && !keystorePwd.isBlank()) {
+                signingConfig = signingConfigs.release
+            } else {
+                signingConfig = signingConfigs.debug
+            }
         }
 
         release {
@@ -194,7 +204,11 @@ android {
             multiDexEnabled = true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             matchingFallbacks = ['release', 'staging', 'debug']
-            signingConfig = signingConfigs.release
+            if (keystorePwd != null && !keystorePwd.isBlank()) {
+                signingConfig = signingConfigs.release
+            } else {
+                signingConfig = signingConfigs.debug
+            }
         }
     }
 
