@@ -76,21 +76,33 @@ jobs:
           cat gradle.properties
       - name: Setup Mock Signing & Debug Build
         id: staging_build_step
-        env:
-          COMMIT_ID: ${{ github.event.head_commit.id }}
         run: |
           export BUILD_TIMESTAMP=$(date +%s)
-          echo "build_timestamp=\(BUILD_TIMESTAMP" >> "\)GITHUB_OUTPUT"
+          echo "build_timestamp=$BUILD_TIMESTAMP" >> "$GITHUB_OUTPUT"
           
-          # ساخت کی‌استور موقت برای دور زدن ایراد storePassword در گریدل
+          # 1. ساخت کی‌استور موقت
           keytool -genkey -v -keystore release.keystore -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=Android Debug,O=Android,C=US"
           
-          echo "RELEASE_STORE_FILE=release.keystore" >> local.properties
+          # 2. تزریق مستقیم متغیرها به سیستم برای دور زدن storePassword
+          export RELEASE_STORE_FILE="$(pwd)/release.keystore"
+          export RELEASE_STORE_PASSWORD="android"
+          export RELEASE_KEY_ALIAS="androiddebugkey"
+          export RELEASE_KEY_PASSWORD="android"
+          
+          # 3. ذخیره در local.properties محض احتیاط
+          echo "RELEASE_STORE_FILE=$(pwd)/release.keystore" >> local.properties
           echo "RELEASE_STORE_PASSWORD=android" >> local.properties
           echo "RELEASE_KEY_ALIAS=androiddebugkey" >> local.properties
           echo "RELEASE_KEY_PASSWORD=android" >> local.properties
           
-          ./gradlew :TMessagesProj:assembleDebug -PAPP_CORRECT_BUILD_KEY=false
+          # 4. پاس دادن مستقیم متغیرها به دستور گریدل
+          ./gradlew :TMessagesProj:assembleDebug \
+            -PRELEASE_STORE_FILE="$(pwd)/release.keystore" \
+            -PRELEASE_STORE_PASSWORD="android" \
+            -PRELEASE_KEY_ALIAS="androiddebugkey" \
+            -PRELEASE_KEY_PASSWORD="android" \
+            -PAPP_CORRECT_BUILD_KEY=false
+            
       - name: Upload armeabi-v7a Artifact
         uses: actions/upload-artifact@v7
         with:
